@@ -1,6 +1,7 @@
 package org.apache.spark.sql
 
 import java.io.File
+import java.util
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
@@ -10,6 +11,7 @@ import org.apache.spark.sql.catalyst.catalog.CatalogTypes.TablePartitionSpec
 import org.apache.spark.sql.catalyst.catalog.{CatalogDatabase, CatalogFunction, CatalogStatistics, CatalogTable, CatalogTablePartition, ExternalCatalog}
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.types.StructType
+import scala.collection.JavaConverters._
 
 class HGSExternalCatalog(conf: SparkConf, hadoopConf: Configuration) extends ExternalCatalog with Logging{
   def checkConnect(): Unit ={
@@ -27,9 +29,7 @@ class HGSExternalCatalog(conf: SparkConf, hadoopConf: Configuration) extends Ext
       val databaseDir = hiveMetaDir+"/"+dbDefinition.name
       val path = new Path(databaseDir)
 
-      logInfo("xxxxxxxxxxxxxxxxxxxx create database:"+dbDefinition.name)
       if(!ignoreIfExists){
-        println("hgsyge=--------------"+databaseDir)
         hdfsClient.mkdirs(path)
       }else{
         if(!hdfsClient.exists(path)){
@@ -44,7 +44,6 @@ class HGSExternalCatalog(conf: SparkConf, hadoopConf: Configuration) extends Ext
 
   override def dropDatabase(db: String, ignoreIfNotExists: Boolean, cascade: Boolean): Unit =
     synchronized {
-      logInfo("xxxxxxxxxxxxxxxx  drop databaes:"+db)
       val databaseDir = hiveMetaDir+"/"+db
       val path = new Path(databaseDir)
       if(hdfsClient.exists(path)){
@@ -64,11 +63,8 @@ class HGSExternalCatalog(conf: SparkConf, hadoopConf: Configuration) extends Ext
 
   override def databaseExists(db: String): Boolean =  synchronized {
     val databaseDir = hiveMetaDir+"/"+db
-    logInfo("xxxxxxxxxxxxxxxxxxxxx  is database exists:"+databaseDir)
-
     try{
      val exists = hdfsClient.exists(new Path(databaseDir))
-      logInfo("database xxxxxxxxxxx exists:"+exists)
       exists
     }catch{
       case _ => false
@@ -76,8 +72,11 @@ class HGSExternalCatalog(conf: SparkConf, hadoopConf: Configuration) extends Ext
   }
 
   override def listDatabases(): Seq[String] =  synchronized {
-    println("........................")
-    null
+    val path = new Path(hiveMetaDir)
+    val value = hdfsClient.listStatus(path)
+    logInfo("xxxxxxxxxxxxxxxxxxxxxxx---"+hiveMetaDir)
+    val res = Seq.empty[String]
+    value.map(_.getPath.getName)
   }
 
   override def listDatabases(pattern: String): Seq[String] =  synchronized {
