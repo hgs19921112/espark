@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+	<property>
+		<name>dfs.replication</name>
+		<value>2</value>
+	</property>
+	
+	<property>
+		<name>dfs.permissions.enabled</name>
+		<value>false</value>
+	</property>
+	<property>
+		<name>dfs.datanode.data.dir</name>
+		<value>/data/sata1/hdfsdata/data,/data/sata2/hdfsdata/data</value>
+	</property>	
+	
+	<property>
+		<name>dfs.namenode.name.dir</name>
+		<value>/data/sata1/hdfsdata/namenode,/data/sata2/hdfsdata/namenode</value>
+	</property>
+<property>
+  <name>dfs.namenode.checkpoint.dir</name>
+   <value>/data/sata3/hdfsdata/namenode,/data/sata4/hdfsdata/namenode</value>
+  <description> </description>
+</property>
+	
+	<property>
+		<name>dfs.secondary.http.address</name>
+		<value>0.0.0.0:50090</value>
+	</property>
+<property>
+         <name>dfs.datanode.fsdataset.volume.choosing.policy</name>
+         <value>org.apache.hadoop.hdfs.server.datanode.fsdataset.AvailableSpaceVolumeChoosingPolicy</value>
+    </property>	
+	<property>
+		<name>dfs.datanode.maxtransfer.threads</name>
+		<value>10240</value>
+	</property>
+	
+ <property>
+        <name>dfs.client.block.write.locateFollowingBlock.retries</name>
+        <value>15</value>
+    </property>
+    <property>
+        <name>dfs.client.socket-timeout</name>
+        <value>600000</value>
+    </property>
+    <property>
+        <name>dfs.datanode.socket.write.timeout</name>
+        <value>600000</value>
+    </property>
+    <property>
+        <name>dfs.balancer.dispatcherThreads</name>
+        <value>4096</value>
+    </property>
+    <property>
+        <name>dfs.mover.moverThreads</name>
+        <value>4096</value>
+    </property>
+    <property>
+        <name>dfs.datanode.socket.reuse.keepalive</name>
+        <value>600000</value>
+    </property>
+    <property>
+        <name>dfs.datanode.synconclose</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>dfs.datanode.readahead.bytes</name>
+        <value>131072</value>
+    </property>
+    <property>
+        <name>dfs.client.socketcache.capacity</name>
+        <value>128</value>
+    </property>
+    <property>
+        <name>dfs.client.socketcache.expiryMsec</name>
+        <value>600000</value>
+    </property>
+    <property>
+        <name>dfs.namenode.max.extra.edits.segments.retained</name>
+        <value>2016</value>
+    </property>
+    <property>
+        <name>dfs.datanode.socket.write.timeout</name>
+        <value>600000</value>
+    </property>
+    <property>
+        <name>dfs.datanode.balance.max.concurrent.moves</name>
+        <value>600</value>
+    </property>
+    <property>
+        <name>dfs.client.hedged.read.threadpool.size</name>
+        <value>300</value>
+    </property>
+    <property>
+        <name>dfs.client.hedged.read.threshold.millis</name>
+        <value>1000</value>
+    </property>
+    <property>
+        <name>dfs.datanode.max.transfer.threads</name>
+        <value>10240</value>
+    </property>
+    <property>
+        <name>dfs.namenode.handler.count</name>
+        <value>1024</value>
+    </property>
+    <property>
+        <name>dfs.datanode.handler.count</name>
+        <value>512</value>
+    </property>
+  
+	
+	<property>
+        <name>dfs.namenode.replication.considerLoad</name>
+        <value>false</value>
+    </property>
+
+	<property>
+        <name>dfs.namenode.service.handler.count</name>
+        <value>40</value>
+    </property>
+<property>
+<name>dfs.datanode.address</name>
+<value>dn1.hadoop.lucene.cn:50011</value>
+</property>
+<property>
+<name>dfs.datanode.ipc.address</name>
+<value>dn1.hadoop.lucene.cn:50021</value>
+</property>
+<property>
+<name>dfs.datanode.http.address</name>
+<value>dn1.hadoop.lucene.cn:50076</value>
+</property>
+        <property>
+          <name>dfs.namenode.accesstime.precision</name>
+          <value>86400000</value>
+          <description> </description>
+        </property>
+
+
+
+</configuration>
