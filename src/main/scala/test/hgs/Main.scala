@@ -4,7 +4,7 @@ import org.apache.spark.sql.HGSSparkSession
 object Main {
   def main(args: Array[String]): Unit = {
     val session = HGSSparkSession.builder().master("local[*]").enableHGSSupport().getOrCreate()
-       val frame = session.sql("show databases")
+       val frame = session.sql("create database xxxx")
     frame.show()
     session.stop()
     //  val url = Thread.currentThread().getContextClassLoader.getResource("/core-site.xml")

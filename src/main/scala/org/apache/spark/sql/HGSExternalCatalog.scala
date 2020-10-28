@@ -29,7 +29,7 @@ class HGSExternalCatalog(conf: SparkConf, hadoopConf: Configuration) extends Ext
       val databaseDir = hiveMetaDir+"/"+dbDefinition.name
       val path = new Path(databaseDir)
 
-      if(!ignoreIfExists){
+      if(ignoreIfExists){
         hdfsClient.mkdirs(path)
       }else{
         if(!hdfsClient.exists(path)){

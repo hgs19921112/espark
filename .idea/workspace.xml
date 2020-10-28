@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e3235fd4-e473-4699-bf56-d1d1448b641f" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/scala/org/apache/spark/sql/HGSExternalCatalog.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/org/apache/spark/sql/HGSExternalCatalog.scala" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/scala/test/hgs/Main.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/test/hgs/Main.scala" afterDir="false" />
@@ -105,7 +104,7 @@
       <option name="presentableId" value="Default" />
       <updated>1603848182263</updated>
       <workItem from="1603848183800" duration="17782000" />
-      <workItem from="1603867724973" duration="7765000" />
+      <workItem from="1603867724973" duration="8290000" />
     </task>
     <servers />
   </component>
