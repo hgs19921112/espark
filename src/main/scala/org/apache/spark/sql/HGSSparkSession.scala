@@ -16,7 +16,7 @@ import scala.util.control.NonFatal
 @InterfaceStability.Stable
 class HGSSparkSession(@transient override val sparkContext: SparkContext
                       ,@transient override private[sql] val extensions: SparkSessionExtensions)
-                      extends SparkSession(sparkContext) with Logging {
+                      extends SparkSession(sparkContext) with Logging { self =>
    private  val creationSite: CallSite = Utils.getCallSite()
   /* ----------------------- *
    |  Session-related state  |
@@ -35,6 +35,17 @@ class HGSSparkSession(@transient override val sparkContext: SparkContext
   override lazy val sharedState: SharedState = {
     new HGSSharedState(sparkContext)
   }
+  @InterfaceStability.Unstable
+  @transient
+  override lazy val sessionState: SessionState = {
+        val state = HGSSparkSession.instantiateSessionState(
+          HGSSparkSession.sessionStateClassName(sparkContext.conf),
+          self)
+        initialSessionOptions.foreach { case (k, v) => state.conf.setConfString(k, v) }
+        state
+
+  }
+
 }
 
 @InterfaceStability.Stable
@@ -188,7 +199,7 @@ object HGSSparkSession extends Logging {
       }
 
       // Global synchronization so we will only set the default session once.
-      SparkSession.synchronized {
+      HGSSparkSession.synchronized {
         // If the current thread does not have an active session, get it from the global session.
         session = defaultSession.get()
         if ((session ne null) && !session.sparkContext.isStopped) {
@@ -371,8 +382,9 @@ object HGSSparkSession extends Logging {
     "org.apache.spark.sql.hive.HiveSessionStateBuilder"
 
   private def sessionStateClassName(conf: SparkConf): String = {
-    conf.get(CATALOG_IMPLEMENTATION) match {
-      case "hive" => HIVE_SESSION_STATE_BUILDER_CLASS_NAME
+    conf.get(OPT_CATALOG_IMPLEMENTATION) match {
+      case "hgs" => HIVE_SESSION_STATE_BUILDER_CLASS_NAME
+      //case "hive" => HIVE_SESSION_STATE_BUILDER_CLASS_NAME
       case "in-memory" => classOf[SessionStateBuilder].getCanonicalName
     }
   }

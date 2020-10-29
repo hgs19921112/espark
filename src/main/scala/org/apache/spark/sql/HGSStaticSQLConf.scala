@@ -1,6 +1,6 @@
 package org.apache.spark.sql
 
-import org.apache.spark.sql.internal.{SQLConf, StaticSQLConf}
+import org.apache.spark.sql.internal.SQLConf
 
 
 object HGSStaticSQLConf {

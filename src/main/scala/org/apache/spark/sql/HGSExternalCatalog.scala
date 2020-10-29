@@ -1,8 +1,11 @@
 package org.apache.spark.sql
 
-import java.io.File
-import java.util
 
+import java.net.URI
+import java.util.regex.Pattern
+
+import com.sun.xml.internal.stream.writers.XMLWriter
+import javax.xml.parsers.{DocumentBuilderFactory, SAXParserFactory}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.{SparkConf, SparkException}
@@ -11,9 +14,18 @@ import org.apache.spark.sql.catalyst.catalog.CatalogTypes.TablePartitionSpec
 import org.apache.spark.sql.catalyst.catalog.{CatalogDatabase, CatalogFunction, CatalogStatistics, CatalogTable, CatalogTablePartition, ExternalCatalog}
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.types.StructType
-import scala.collection.JavaConverters._
+import org.w3c.dom.bootstrap.DOMImplementationRegistry
+import org.w3c.dom.ls.DOMImplementationLS
 
 class HGSExternalCatalog(conf: SparkConf, hadoopConf: Configuration) extends ExternalCatalog with Logging{
+  var hdfsClient = getFileSystem()
+
+  val hiveMetaDir = hadoopConf.get("hive.metastore.warehouse.dir","/user/hive/warehouse/metastore")
+
+  var currentDatabase = CatalogDatabase("default",""
+    ,new URI(hiveMetaDir+"/default")
+    ,Map.empty[String,String])
+
   def checkConnect(): Unit ={
 
   }
@@ -21,10 +33,7 @@ class HGSExternalCatalog(conf: SparkConf, hadoopConf: Configuration) extends Ext
   def getFileSystem(): FileSystem = synchronized{
     FileSystem.get(hadoopConf)
   }
-  var hdfsClient = getFileSystem()
-
-  val hiveMetaDir = hadoopConf.get("hive.metastore.warehouse.dir","/user/hive/warehouse/metastore")
-  override def createDatabase(dbDefinition: CatalogDatabase, ignoreIfExists: Boolean): Unit =
+ override def createDatabase(dbDefinition: CatalogDatabase, ignoreIfExists: Boolean): Unit =
     synchronized {
       val databaseDir = hiveMetaDir+"/"+dbDefinition.name
       val path = new Path(databaseDir)
@@ -36,7 +45,7 @@ class HGSExternalCatalog(conf: SparkConf, hadoopConf: Configuration) extends Ext
           hdfsClient.mkdirs(path)
         }else{
           logInfo(s"database '${dbDefinition.name}' is already exists!")
-          throw new SparkException("error!")
+          throw new SparkException(s"database '${dbDefinition.name}' is already exists!")
         }
 
       }
@@ -57,8 +66,8 @@ class HGSExternalCatalog(conf: SparkConf, hadoopConf: Configuration) extends Ext
   }
 
   override def getDatabase(db: String): CatalogDatabase =  synchronized {
-    println("........................")
-    null
+    val path = new Path(hiveMetaDir+"/"+"db")
+      CatalogDatabase(db,"",new URI(path.toString),Map.empty[String,String])
   }
 
   override def databaseExists(db: String): Boolean =  synchronized {
@@ -74,23 +83,118 @@ class HGSExternalCatalog(conf: SparkConf, hadoopConf: Configuration) extends Ext
   override def listDatabases(): Seq[String] =  synchronized {
     val path = new Path(hiveMetaDir)
     val value = hdfsClient.listStatus(path)
-    logInfo("xxxxxxxxxxxxxxxxxxxxxxx---"+hiveMetaDir)
-    val res = Seq.empty[String]
     value.map(_.getPath.getName)
   }
 
   override def listDatabases(pattern: String): Seq[String] =  synchronized {
-    println("........................")
-    null
+    val path = new Path(hiveMetaDir)
+    val value = hdfsClient.listStatus(path)
+    value.map(_.getPath.getName).filter{
+      part =>{
+        Pattern.matches(part,pattern)
+      }
+    }
   }
 
   override def setCurrentDatabase(db: String): Unit =  synchronized {
-    println("........................")
+    if(hdfsClient.exists(new Path(hiveMetaDir+"/"+db))) {
+
+      currentDatabase = CatalogDatabase(db,""
+                ,new URI(hiveMetaDir+"/"+db)
+                ,Map.empty[String,String])
+    }else{
+      throw new SparkException("database not exits!")
+    }
 
   }
 
-  override def createTable(tableDefinition: CatalogTable, ignoreIfExists: Boolean): Unit =  synchronized {
-    println("........................")
+
+  override def createTable(tableDefinition: CatalogTable, ignoreIfExists: Boolean): Unit =
+    synchronized {
+      val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
+      val root = document.createElement(HGSExternalCatalog.tableRootIdentifier)
+
+      val tableType = document.createElement(HGSExternalCatalog.tableTypeIdentifier)
+      root.appendChild(tableType)
+      val tablename = document.createElement(HGSExternalCatalog.tableNameIdentifier)
+      root.appendChild(tablename)
+      val tableDatabase = document.createElement(HGSExternalCatalog.tableDatabaseIdentifier)
+      root.appendChild(tableDatabase)
+      val storageFormat = document.createElement(HGSExternalCatalog.storageFormatIdentifier)
+      root.appendChild(storageFormat)
+      val storageOutput = document.createElement(HGSExternalCatalog.outPutIdentifier)
+      storageFormat.appendChild(storageOutput)
+      storageOutput.appendChild(document.createTextNode(tableDefinition.storage.outputFormat.getOrElse("")))
+      val storageInput = document.createElement(HGSExternalCatalog.inputPutIdentifier)
+      storageFormat.appendChild(storageInput)
+      storageInput.appendChild(document.createTextNode(tableDefinition.storage.inputFormat.getOrElse("")))
+      val schema = document.createElement(HGSExternalCatalog.schemaIdentifier)
+      root.appendChild(schema)
+      val provider = document.createElement(HGSExternalCatalog.propertiesIdentifier)
+      root.appendChild(provider)
+      val partitionColumn = document.createElement(HGSExternalCatalog.partitionColumnName)
+      root.appendChild(partitionColumn)
+      val owner = document.createElement(HGSExternalCatalog.ownerIdentifier)
+      root.appendChild(owner)
+      val createtime = document.createElement(HGSExternalCatalog.createTimeIdentifier)
+      root.appendChild(createtime)
+      val properties = document.createElement(HGSExternalCatalog.propertiesIdentifier)
+      root.appendChild(properties)
+      val comment = document.createElement(HGSExternalCatalog.commentIdentifier)
+      root.appendChild(comment)
+
+
+      //root.add(new DefaultAttribute(new QName("tablename"),tableDefinition.identifier.identifier))
+      tableType.appendChild(document.createTextNode(tableDefinition.tableType.name))
+      tablename.appendChild(document.createTextNode(tableDefinition.identifier.identifier))
+      tableDatabase.appendChild(document.createTextNode(tableDefinition.database))
+      storageOutput.appendChild(document.createTextNode(tableDefinition.storage.outputFormat.get))
+      storageInput.appendChild(document.createTextNode(tableDefinition.storage.inputFormat.get))
+      tableDefinition.schema.foreach{
+        filed=>{
+          val column = document.createElement(HGSExternalCatalog.schemaColumn)
+          val columntype = document.createElement(HGSExternalCatalog.columntype)
+          columntype.appendChild(document.createTextNode(filed.dataType.simpleString))
+          column.appendChild(columntype)
+
+          val columnname = document.createElement(HGSExternalCatalog.columnName)
+          columnname.appendChild(document.createTextNode(filed.name))
+          column.appendChild(columnname)
+
+          val nullable = document.createElement(HGSExternalCatalog.columnnullable)
+          nullable.appendChild(document.createTextNode(filed.nullable.toString))
+          column.appendChild(nullable)
+
+          val comment = document.createElement(HGSExternalCatalog.commentIdentifier)
+          comment.appendChild(document.createTextNode(filed.getComment().getOrElse("")))
+          column.appendChild(comment)
+
+          schema.appendChild(column)
+
+        }
+      }
+      //columns
+
+      provider.appendChild(document.createTextNode(tableDefinition.provider.getOrElse("")))
+      partitionColumn.appendChild(document.createTextNode(tableDefinition.partitionColumnNames.mkString(",")))
+      owner.appendChild(document.createTextNode(tableDefinition.owner))
+      createtime.appendChild(document.createTextNode(tableDefinition.createTime.toString))
+      comment.appendChild(document.createTextNode(tableDefinition.comment.getOrElse("")))
+
+      val dest = hdfsClient.create(
+        new Path(hiveMetaDir+"/"+tableDefinition.database+"/"+tableDefinition.identifier.identifier+".xml"),true)
+      document.appendChild(root)
+      document.setXmlVersion("1.0")
+      val registry = DOMImplementationRegistry.newInstance()
+      val  impl =
+        registry.getDOMImplementation("LS").asInstanceOf[DOMImplementationLS]
+      val writer = impl.createLSSerializer
+
+      val str = writer.writeToString(document)
+      val buf = str.getBytes
+      dest.write(str.getBytes,0,buf.length)
+      dest.flush()
+      dest.close()
 
   }
 
@@ -225,4 +329,27 @@ class HGSExternalCatalog(conf: SparkConf, hadoopConf: Configuration) extends Ext
   {
     null
   }
+}
+
+object  HGSExternalCatalog{
+  val tableRootIdentifier = "table"
+  val tableTypeIdentifier = "type"
+  val storageFormatIdentifier = "storageType"
+  val schemaIdentifier = "schema"
+  val schemaColumns = "columns"
+  val schemaColumn = "column"
+  val columnName = "columnname"
+  val columntype = "columntype"
+  val columnnullable = "nullable"
+  val providerIdentifier = "provider"
+  val partitionColumnName = "partitionColumn"
+  val ownerIdentifier = "owner"
+  val createTimeIdentifier = "createtime"
+  val propertiesIdentifier = "properties"
+  val propertyIdentifier = "property"
+  val commentIdentifier = "comment"
+  val tableNameIdentifier = "tablename"
+  val tableDatabaseIdentifier = "database"
+  val outPutIdentifier = "outputformat"
+  val inputPutIdentifier = "inputformat"
 }
