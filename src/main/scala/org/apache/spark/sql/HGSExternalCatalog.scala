@@ -90,8 +90,12 @@ class HGSExternalCatalog(conf: SparkConf, hadoopConf: Configuration) extends Ext
     val path = new Path(hiveMetaDir)
     val value = hdfsClient.listStatus(path)
     value.map(_.getPath.getName).filter{
-      part =>{
-        Pattern.matches(part,pattern)
+      part=>{
+          try{
+            part.matches(pattern)
+          }catch{
+            case _:Exception => false
+          }
       }
     }
   }
