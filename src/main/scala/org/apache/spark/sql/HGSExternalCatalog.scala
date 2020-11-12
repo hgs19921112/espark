@@ -7,7 +7,7 @@ import java.util.regex.Pattern
 import com.sun.xml.internal.stream.writers.XMLWriter
 import javax.xml.parsers.{DocumentBuilderFactory, SAXParserFactory}
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
 import org.apache.spark.{SparkConf, SparkException}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.catalog.CatalogTypes.TablePartitionSpec
@@ -184,9 +184,9 @@ class HGSExternalCatalog(conf: SparkConf, hadoopConf: Configuration) extends Ext
       owner.appendChild(document.createTextNode(tableDefinition.owner))
       createtime.appendChild(document.createTextNode(tableDefinition.createTime.toString))
       comment.appendChild(document.createTextNode(tableDefinition.comment.getOrElse("")))
-
-      val dest = hdfsClient.create(
-        new Path(hiveMetaDir+"/"+tableDefinition.database+"/"+tableDefinition.identifier.identifier+".xml"),true)
+      val tablePath_prfix = hiveMetaDir+"/"+tableDefinition.database+"/" /**+tableDefinition.identifier.identifier+".xml.oncreate"**/
+      val tablepath_tmp = new Path(tablePath_prfix+tableDefinition.identifier.identifier+".xml.oncreate")
+      val dest = hdfsClient.create(tablepath_tmp,true)
       document.appendChild(root)
       document.setXmlVersion("1.0")
       val registry = DOMImplementationRegistry.newInstance()
@@ -199,6 +199,8 @@ class HGSExternalCatalog(conf: SparkConf, hadoopConf: Configuration) extends Ext
       dest.write(str.getBytes,0,buf.length)
       dest.flush()
       dest.close()
+      val tablepath_final = new Path(tablePath_prfix+tableDefinition.identifier.identifier+".xml")
+      hdfsClient.rename(tablepath_tmp,tablepath_final)
 
   }
 
@@ -233,18 +235,36 @@ class HGSExternalCatalog(conf: SparkConf, hadoopConf: Configuration) extends Ext
   }
 
   override def tableExists(db: String, table: String): Boolean =  synchronized {
-    println("........................")
+    println("........................///")
     false
   }
 
+
+  private def dbaseUrl(db:String):Array[FileStatus] = {
+    hdfsClient.listStatus(new Path(hiveMetaDir+"/"+db))
+  }
   override def listTables(db: String): Seq[String] =  synchronized {
-    println("........................")
-    null
+    try {
+
+      dbaseUrl(db)
+        .map(_.getPath.getName)
+        .filter(_.endsWith(".xml"))
+        .toSeq
+    }catch{
+      case e:Exception => throw new RuntimeException(e)
+    }
+
   }
 
   override def listTables(db: String, pattern: String): Seq[String] =  synchronized {
-    println("........................")
-    null
+    try {
+        dbaseUrl(db)
+        .map(_.getPath.getName)
+        .filter(_.endsWith(".xml"))
+        .filter{value =>if(pattern.equals("*")) true else value.matches(pattern)}.toSeq
+    }catch{
+      case e:Exception => throw new RuntimeException(e)
+    }
   }
 
   override def loadTable(db: String, table: String, loadPath: String, isOverwrite: Boolean, isSrcLocal: Boolean): Unit =  synchronized {

@@ -107,7 +107,9 @@
       <workItem from="1603848183800" duration="17782000" />
       <workItem from="1603867724973" duration="8290000" />
       <workItem from="1603934853417" duration="19272000" />
-      <workItem from="1603966734746" duration="4392000" />
+      <workItem from="1603966734746" duration="5023000" />
+      <workItem from="1604306292722" duration="24000" />
+      <workItem from="1605175767904" duration="3314000" />
     </task>
     <servers />
   </component>
@@ -126,5 +128,21 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="scala-line">
+          <url>jar://D:/software/apache-maven-3.5.4/repos/org/apache/spark/spark-catalyst_2.12/2.4.7/spark-catalyst_2.12-2.4.7-sources.jar!/org/apache/spark/sql/catalyst/catalog/SessionCatalog.scala</url>
+          <line>763</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="scala-line">
+          <url>jar://D:/software/apache-maven-3.5.4/repos/org/apache/spark/spark-catalyst_2.12/2.4.7/spark-catalyst_2.12-2.4.7-sources.jar!/org/apache/spark/sql/catalyst/catalog/ExternalCatalogWithListener.scala</url>
+          <line>145</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

@@ -9,7 +9,7 @@ object Main {
       .enableHGSSupport()
       .getOrCreate()
     session.sql("use xxxx")
-    val frame = session.sql("show databases like 'x*'")
+    val frame = session.sql("show tables")
     frame.show()
     session.stop()
     //val duilder =  DocumentBuilderFactory.newInstance()
